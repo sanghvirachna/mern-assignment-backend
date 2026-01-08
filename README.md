@@ -100,6 +100,35 @@ You may refactor the service if needed, but minimal changes are preferred.
 
 ---
 
-## Submission
+---
 
-- Fork this repository and share the link on email.
+## Solutions and Improvements
+
+### 1. Concurrency and Race Conditions
+**Issue**: The original implementation was susceptible to race conditions. Multiple simultaneous debit/credit requests for the same user could lead to inconsistent balances because the read-modify-write cycle was not atomic.
+**Solution**: Implemented a **Promise-based locking mechanism** (`withLock`) in `WalletService`.
+- It ensures that balance operations for a specific user are queued and executed sequentially.
+- This maintains atomicity even in an asynchronous environment without using a traditional database lock.
+
+### 2. Input Validation
+**Issue**: The API accepted negative amounts (which could lead to logical errors) and didn't strictly validate the presence of `userId`.
+**Solution**: 
+- Added checks for `amount > 0`.
+- Added checks for `userId` presence.
+- Automatically initializes a wallet for a user during a `credit` operation if it doesn't already exist, improving the developer experience.
+
+### 3. Asynchronous Consistency
+**Issue**: Some methods were synchronous while others were asynchronous, making the API inconsistent and harder to refactor for future database integration.
+**Solution**: Converted all service methods to `async`. This ensures consistent error handling (via Promises) and makes it trivial to swap the in-memory store for a persistent database (PostgreSQL/MongoDB) in the future.
+
+### 4. Robust Error Handling
+- Leveraged NestJS `BadRequestException` for consistent API error responses.
+- Improved the `debit` method to strictly check for wallet existence and sufficient balance before proceeding.
+
+### 5. Documentation & Maintainability
+- Added JSDoc comments to `WalletService` to explain the locking logic and method purposes.
+- Fixed existing unit tests (`wallet.controller.spec.ts`) that were failing due to missing dependency injection.
+
+---
+
+

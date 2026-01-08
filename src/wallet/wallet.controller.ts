@@ -7,16 +7,16 @@ export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
   @Get('balance')
-  getBalance(@Query('userId') userId: string) {
+  async getBalance(@Query('userId') userId: string) {
     return {
-      balance: this.walletService.getBalance(userId),
+      balance: await this.walletService.getBalance(userId),
     };
   }
 
   @Post('credit')
-  credit(@Body() body: AmountDto) {
+  async credit(@Body() body: AmountDto) {
     return {
-      balance: this.walletService.credit(body.userId, body.amount),
+      balance: await this.walletService.credit(body.userId, body.amount),
     };
   }
 
